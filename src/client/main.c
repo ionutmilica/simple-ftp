@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
         
         parse_command(command, cmd);
         
-        code = execute_command(cmd);
+        //code = execute_command(cmd);
     }
     //Close socket
     close(sock_opd);

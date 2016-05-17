@@ -31,7 +31,7 @@ void context_handle(context* ctx, command* cmd) {
 		break;
 		case PASS:
 			ctx->logged_in = 1;
-			message_send(ctx->fd, "230 Login successful\n";
+			message_send(ctx->fd, "230 Login successful\n");
 		break;
 		default:
 			message_send(ctx->fd, "502 Not implemented\n");
