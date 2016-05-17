@@ -8,6 +8,14 @@ Team:
 * Pop Tudor
 * Stefăniță Răzvan
 
+How to compile & run:
+----
+```bash
+cd build
+cmake ..
+../bin/server [port]
+../bin/client [ip] [port]
+```
 
 License:
 -----

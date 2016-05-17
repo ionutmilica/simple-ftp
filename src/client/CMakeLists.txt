@@ -8,7 +8,4 @@ include_directories(
 )
 
 # Creates the executable
-add_executable(server ${sv_Files})
-
-# Add pthread to the executable
-TARGET_LINK_LIBRARIES(server pthread)
+add_executable(client ${sv_Files})
