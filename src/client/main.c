@@ -76,17 +76,15 @@ int main(int argc, char* argv[])
 
     code = ftp_login(sock_opd, argv[3], argv[4]);
     if(code == 230){
-        printf("Client connected.\n");
-    }
-    
-    while(1){
-        Command *cmd = malloc(sizeof(Command));
-        fgets(command, sizeof(command), stdin);
-        clean_string(command);
-        
-        parse_command(command, cmd);
-        
-        //code = execute_command(cmd);
+        while(1){
+            Command *cmd = malloc(sizeof(Command));
+            fgets(command, sizeof(command), stdin);
+            clean_string(command);
+            
+            parse_command(command, cmd);
+            
+            //code = execute_command(cmd);
+        }
     }
     //Close socket
     close(sock_opd);
@@ -173,7 +171,7 @@ int ftp_send_file(int sock, char* filepath){
 
 void parse_response(char *rspstring, Response *rsp)
 {
-    sscanf(rspstring,"%d %s",&rsp->code,rsp->message);
+    sscanf(rspstring,"%d %*s",&rsp->code,rsp->message);
 }
 
 void parse_command(char *cmdstring, Command *cmd)
@@ -197,6 +195,8 @@ void recv_response(int sock, Response *response){
     if(bytes_read <= BSIZE){
         parse_response(buffer, response);
     }
+	printf("%s", buffer);
+	memset(buffer, 0, BSIZE);
 }
 
 void send_file(int sock, char* filename){
