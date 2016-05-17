@@ -12,7 +12,8 @@ How to compile & run:
 ----
 ```bash
 cd build
-cmake ..
+cmake .. # if you add files or change the structure
+make
 ../bin/server [port]
 ../bin/client [ip] [port]
 ```
