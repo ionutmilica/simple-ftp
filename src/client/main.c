@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     if(code == 230){
         while(1){
             Command *cmd = malloc(sizeof(Command));
+            fflush(stdin);
             fgets(command, sizeof(command), stdin);
             clean_string(command);
 

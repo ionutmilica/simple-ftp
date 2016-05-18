@@ -13,48 +13,16 @@
 #include <time.h>
 
 #include "common.h"
+#include "utils.h"
 #include "context.h"
 #include "command.h"
-
-/**
- * Creates a socket and binds
- *
- * @param port int
- * @return int
- */
-int create_socket(int port)
-{
-	struct sockaddr_in server_addr;
-	int sock, reuse = 1;
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(port);
-
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		fprintf(stderr, "Cannot open socket\n");
-		exit(EXIT_FAILURE);
-	}
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof reuse);
-
-	if (bind(sock,(struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
-		perror("Cannot bind socket to address");
-		exit(EXIT_FAILURE);
-	}
-
-  	listen(sock, 5);
-
-  	return sock;
-}
 
 void* handler(void* data) {
 	int sock = *(int*) data, bytes_read;
 	char buffer[BUFFER_SIZE];
 
 	// Send welcome message	
-	char* welcome = "220 Hello boss!\n";
- 	write(sock, welcome, strlen(welcome));
+ 	message_send(sock, "220 Welcome!\n");
 
  	context* ctx = context_new();
  	ctx->fd = sock;
