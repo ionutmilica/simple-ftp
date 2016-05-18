@@ -45,10 +45,10 @@ int main(int argc, char* argv[])
             Command *cmd = malloc(sizeof(Command));
             fgets(command, sizeof(command), stdin);
             clean_string(command);
-            
+
             parse_command(command, cmd);
             
-            //code = execute_command(cmd);
+            code = execute_command(cmd, sock_opd);
         }
     }
     //Close socket
@@ -79,6 +79,7 @@ void recv_response(int sock, Response *response){
     char buffer[BSIZE];
     int bytes_read;
 
+    memset(buffer, 0, BSIZE);
     bytes_read = read(sock, buffer, BSIZE);
     if(bytes_read <= BSIZE){
         parse_response(buffer, response);

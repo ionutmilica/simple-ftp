@@ -22,13 +22,26 @@ typedef struct Command
   char arg[1024];
 } Command;
 
+typedef enum cmdlist 
+{ 
+  DELE, LIST, PASS, PASV, RETR, USER, STOR
+} cmdlist;
+
+static const char *cmdlist_str[] = 
+{
+  "DELE", "LIST", "PASS", "PASV", "RETR", "USER", "STOR"
+};
 
 void clean_string(char*);
 void recv_response(int, Response*);
 void parse_response(char*, Response*);
 void parse_command(char*, Command*);
 void send_file(int, char*);
-int execute_command(Command *);
+
+
+int lookup_cmd(char *);
+int lookup(char *, const char **, int);
+int execute_command(Command *, int);
 
 int ftp_pasv(int);
 int ftp_login(int, char*, char*);

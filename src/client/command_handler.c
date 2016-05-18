@@ -82,7 +82,7 @@ int ftp_remove_file(int sock, char* filepath){
 int ftp_ls_firectory(int socket, char* path){
     int socksend;
     char buff[BSIZE];
-    char *cmdfn = "RETR %s";
+    char *cmdfn = "LIST %s";
     Response *response = malloc(sizeof(Response)); 
     
     socksend = ftp_pasv(socket);
@@ -134,4 +134,29 @@ int ftp_pasv(int sock){
         return socksend;
     }
     return -1;
+}
+
+int lookup_cmd(char *cmd){
+  const int cmdlist_count = sizeof(cmdlist_str)/sizeof(char *);
+  return lookup(cmd, cmdlist_str, cmdlist_count);
+}
+
+int lookup(char *needle, const char **haystack, int count)
+{
+  int i;
+  for(i=0;i<count; i++){
+    if(strcmp(needle,haystack[i])==0)return i;
+  }
+  return -1;
+}
+
+int execute_command(Command *cmd, int sock){
+	switch(lookup_cmd(cmd->command)){
+	    case LIST: ftp_ls_firectory(sock, cmd->arg); break;
+	    case RETR: ftp_recv_file(sock, cmd->arg); break;
+	    case STOR: ftp_send_file(sock, cmd->arg); break;
+	    case DELE: ftp_remove_file(sock, cmd->arg); break;
+	    default: 
+	      break;
+	  }
 }
