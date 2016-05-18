@@ -1,41 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <resolv.h>
-#include <signal.h>
-#include <fcntl.h>
-
-#define MAX_LEN 512
-#define BSIZE 1024
-
-typedef struct Response
-{
-  int code;
-  char message[1024];
-} Response;
-
-typedef struct Command
-{
-  char command[5];
-  char arg[1024];
-} Command;
+#include "header.h"
 
 int sock_opd;
-
-void clean_string(char*);
-void recv_response(int, Response*);
-void parse_response(char*, Response*);
-void parse_command(char*, Command*);
-void send_file(int, char*);
-int execute_command(Command *);
-
-int ftp_login(int, char*, char*);
-int ftp_send_file(int, char*);
-int ftp_recv_file(int, char*);
-int ftp_remove_file(int, char*);
-int ftp_ls_firectory(int, char*);
 
 int main(int argc, char* argv[])
 {   
@@ -90,83 +55,6 @@ int main(int argc, char* argv[])
     close(sock_opd);
 
     return 0;
-}
-
-int ftp_login(int sock, char* username, char* password){
-    char msg[BSIZE];
-    char *username_msg = "USER %s";
-    char *password_msg = "PASS %s";
-    Response *response = malloc(sizeof(Response));
-
-    recv_response(sock, response);
-    if(response->code == 220){
-        sprintf(msg, username_msg, username);
-        send(sock, msg, sizeof(msg), 0);
-    }else{
-        return response->code;
-    }
-    memset(msg, 0, BSIZE);
-
-    recv_response(sock, response);
-    if(response->code == 331){
-        sprintf(msg,password_msg,password);
-        send(sock, msg, sizeof(msg), 0);
-    }else{
-        return response->code;
-    }
-    memset(msg, 0, BSIZE);
-    
-    recv_response(sock, response);
-    return response->code;
-}
-
-int ftp_send_file(int sock, char* filepath){
-    int ip[4], p1, p2, socksend, fd;
-    struct sockaddr_in sv_adress;
-    char buff[BSIZE];
-    char ipadr[12];
-    char *cmd = "PASV";
-    char *cmdfn = "STOR %s";
-    Response *response = malloc(sizeof(Response)); 
-    
-    send(sock, cmd, sizeof(cmd), 0);
-    
-    recv_response(sock, response);
-    if(response->code == 227){
-        sscanf(response->message,"%d,%d,%d,%d,%d,%d",&ip[0],&ip[1],&ip[2],&ip[3],&p1,&p2);
-        sprintf(ipadr, "%d.%d.%d.%d", ip[0],ip[1],ip[2],ip[3]);
-        
-        socksend = socket(AF_INET, SOCK_STREAM , 0);
-        if(socksend < 0){
-            printf("Open socket error!\n");
-            exit(0);
-        }
-
-        sv_adress.sin_family = AF_INET;
-        sv_adress.sin_port = 256 * p1 + p2;
-        if (inet_aton(ipadr, &sv_adress.sin_addr.s_addr) == 0 )
-        {
-            perror(ipadr);
-            exit(0);
-        }
-
-        if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 )
-        {
-            perror("Connect ");
-            exit(0);
-        }
-        printf("Client connected to send file.\n");
-        
-        sprintf(buff, cmdfn, filepath);
-        send(sock, buff, sizeof(buff), 0);
-        send_file(socksend, filepath);
-
-        recv_response(sock, response);
-        return response->code;
-        
-    }else{
-        return response->code;
-    }
 }
 
 void parse_response(char *rspstring, Response *rsp)
