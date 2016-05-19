@@ -22,6 +22,12 @@ typedef struct Command
   char arg[1024];
 } Command;
 
+typedef struct ConnectionInfo
+{
+	int ip[4];
+	int port;
+}ConnectionInfo;
+
 typedef enum cmdlist 
 { 
   DELE, LIST, PASS, PASV, RETR, USER, STOR
@@ -43,7 +49,8 @@ int lookup_cmd(char *);
 int lookup(char *, const char **, int);
 int execute_command(Command *, int);
 
-int ftp_pasv(int);
+int connect_to_server(ConnectionInfo *);
+int ftp_pasv(int, ConnectionInfo*);
 int ftp_login(int, char*, char*);
 int ftp_send_file(int, char*);
 int ftp_recv_file(int, char*);

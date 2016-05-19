@@ -60,12 +60,12 @@ int main(int argc, char* argv[])
 
 void parse_response(char *rspstring, Response *rsp)
 {
-    sscanf(rspstring,"%d %*s",&rsp->code,rsp->message);
+    sscanf(rspstring,"%d %[^\n]",&rsp->code,rsp->message);
 }
 
 void parse_command(char *cmdstring, Command *cmd)
 {
-  sscanf(cmdstring,"%s %s",cmd->command,cmd->arg);
+    sscanf(cmdstring,"%s %[^\n]",cmd->command,cmd->arg);
 }
 
 void clean_string(char* string) {

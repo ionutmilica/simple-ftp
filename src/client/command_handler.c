@@ -34,12 +34,12 @@ int ftp_send_file(int sock, char* filepath){
     char *cmdfn = "STOR %s";
     Response *response = malloc(sizeof(Response)); 
     
-    socksend = ftp_pasv(sock);
-    sprintf(buff, cmdfn, filepath);
-    send(sock, buff, sizeof(buff), 0);
-    send_file(socksend, filepath);
+    // socksend = ftp_pasv(sock);
+    // sprintf(buff, cmdfn, filepath);
+    // send(sock, buff, sizeof(buff), 0);
+    // send_file(socksend, filepath);
 
-    recv_response(sock, response);
+    // recv_response(sock, response);
     return response->code;
 }
 
@@ -49,21 +49,21 @@ int ftp_recv_file(int sock, char* filepath){
     char *cmdfn = "RETR %s";
     Response *response = malloc(sizeof(Response)); 
     
-    socksend = ftp_pasv(sock);
-    sprintf(buff, cmdfn, filepath);
-    send(sock, buff, sizeof(buff), 0);
+//     socksend = ftp_pasv(sock);
+//     sprintf(buff, cmdfn, filepath);
+//     send(sock, buff, sizeof(buff), 0);
 
-    recv_response(sock, response);
+//     recv_response(sock, response);
 
-    if(response->code == 150){
-        FILE *fp = fopen(filepath,"w");
-        fdfile = fileno(fp);
-        if(pipe(pipefd)==-1)perror("ftp_stor: pipe");
-//            while ((res = splice(connection, 0, pipefd[1], NULL, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE))>0){
-//                splice(pipefd[0], NULL, fd, 0, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE);
-//              }
-    }       
-    recv_response(sock, response);
+//     if(response->code == 150){
+//         FILE *fp = fopen(filepath,"w");
+//         fdfile = fileno(fp);
+//         if(pipe(pipefd)==-1)perror("ftp_stor: pipe");
+// //            while ((res = splice(connection, 0, pipefd[1], NULL, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE))>0){
+// //                splice(pipefd[0], NULL, fd, 0, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE);
+// //              }
+//     }       
+//     recv_response(sock, response);
     return response->code;
 }
 
@@ -80,60 +80,79 @@ int ftp_remove_file(int sock, char* filepath){
 }
 
 int ftp_ls_firectory(int socket, char* path){
-    int socksend;
+    int socksend, r;
     char buff[BSIZE];
     char *cmdfn = "LIST %s";
     Response *response = malloc(sizeof(Response)); 
+    ConnectionInfo *cifs = malloc(sizeof(ConnectionInfo));
     
-    socksend = ftp_pasv(socket);
+    ftp_pasv(socket, cifs);
+    
     sprintf(buff, cmdfn, path);
     send(socket, buff, sizeof(buff), 0);
 
-    recv_response(socket, response);
+    socksend = connect_to_server(cifs);
 
+    recv_response(socket, response);
     if(response->code == 150){
-        //TODO READ LS
-    }       
+        memset(buff, 0, BSIZE);
+        while((r = recv(socksend , buff , BSIZE, 0)) > 0)
+        {
+            printf("%s", buff);
+        }
+    }
+
     recv_response(socket, response);
     return response->code;
 }
 
-int ftp_pasv(int sock){
+int ftp_pasv(int sock, ConnectionInfo* cif){
     int ip[4], p1, p2, socksend;
-    struct sockaddr_in sv_adress;
-    char ipadr[12];
     char *cmd = "PASV";
     Response *response = malloc(sizeof(Response)); 
     
     send(sock, cmd, sizeof(cmd), 0);
     
     recv_response(sock, response);
+
     if(response->code == 227){
-        sscanf(response->message,"%d,%d,%d,%d,%d,%d",&ip[0],&ip[1],&ip[2],&ip[3],&p1,&p2);
-        sprintf(ipadr, "%d.%d.%d.%d", ip[0],ip[1],ip[2],ip[3]);
+        sscanf(response->message,"%*[^0123456789]%d%*[^0123456789]%d%*[^0123456789]%d%*[^0123456789]%d%*[^0123456789]%d%*[^0123456789]%d",&ip[0],&ip[1],&ip[2],&ip[3],&p1,&p2);
         
-        socksend = socket(AF_INET, SOCK_STREAM , 0);
-        if(socksend < 0){
-            printf("Open socket error!\n");
-            exit(0);
-        }
-
-        sv_adress.sin_family = AF_INET;
-        sv_adress.sin_port = 256 * p1 + p2;
-        if (inet_aton(ipadr, &sv_adress.sin_addr.s_addr) == 0 )
-        {
-            perror(ipadr);
-            exit(0);
-        }
-
-        if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 )
-        {
-            perror("Connect ");
-            exit(0);
-        }
-        return socksend;
+        cif->ip[0] = ip[0];
+        cif->ip[1] = ip[1];
+        cif->ip[2] = ip[2];
+        cif->ip[3] = ip[3];
+        cif->port = 256 * p1 + p2;
     }
-    return -1;
+    return response->code;
+}
+
+int connect_to_server(ConnectionInfo *cif){
+    int socksend;
+    struct sockaddr_in sv_adress;
+    char ipadr[17];
+    sprintf(ipadr, "%d.%d.%d.%d\0", cif->ip[0],cif->ip[1],cif->ip[2],cif->ip[3]);
+
+    socksend = socket(AF_INET, SOCK_STREAM , 0);
+    if(socksend < 0){
+        printf("Open socket error!\n");
+        exit(0);
+    }
+
+    sv_adress.sin_family = AF_INET;
+    sv_adress.sin_port = htons(cif->port);
+    if (inet_aton(ipadr, &sv_adress.sin_addr.s_addr) == 0 )
+    {
+        perror(ipadr);
+        exit(0);
+    }
+
+    if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 )
+    {
+        perror("Connect ");
+        exit(0);
+    }
+    return socksend;
 }
 
 int lookup_cmd(char *cmd){
