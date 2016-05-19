@@ -2,6 +2,7 @@
 #define CONTEXT_H
 
 #include "command.h"
+#include "user.h"
 
 typedef enum modes {
 	NORMAL,
@@ -10,10 +11,12 @@ typedef enum modes {
 } modes;
 
 typedef struct context {
+	char user[100];
 	int logged_in;
 	int fd;
 	int pasv_fd;
 	int mode;
+	user_manager* mgr;
 } context;
 
 context* context_new();

@@ -13,6 +13,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include "user.h"
+
 void cmd_pasv(context* ctx, command* cmd) 
 {
 	int ip[4] = {127, 0, 0, 1};
@@ -143,10 +145,21 @@ void cmd_pwd(context* ctx, command* cmd) {
 }
 
 void cmd_user(context* ctx, command* cmd) {
+	if (!user_manager_find(ctx->mgr, cmd->arg)) {
+		message_send(ctx->fd, "530 Invalid username\n");
+		return;
+	}
+	// Save the username for future uses
+	strcpy(ctx->user, cmd->arg);
 	message_send(ctx->fd, "331 User name okay, need password.\n");
 }
 
 void cmd_pass(context* ctx, command* cmd) {
+	if (!user_manager_find_with_pass(ctx->mgr, ctx->user, cmd->arg)) {
+		message_send(ctx->fd, "500 Invalid username or password\n");
+		return;
+	}
+
 	ctx->logged_in = 1;
 	message_send(ctx->fd, "230 Login successful\n");
 }
