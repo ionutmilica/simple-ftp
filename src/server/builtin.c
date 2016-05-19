@@ -17,12 +17,19 @@
 
 void cmd_pasv(context* ctx, command* cmd) 
 {
+	int port, p1, p2;
 	int ip[4] = {127, 0, 0, 1};
 	char buffer[BUFFER_SIZE];
-	//getip(ctx->fd, ip);
-	int port = 5666;
-	int p1 = ((port >> 8) & 0xFF);
-	int p2 = (port & 0xFF);
+
+	if (!ctx->logged_in) {
+			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+			return;
+	}
+
+	// @todo: Generate the port
+	port = 5666;
+	p1 = ((port >> 8) & 0xFF);
+	p2 = (port & 0xFF);
 
 	if (ctx->pasv_fd != -1) {
 		close(ctx->pasv_fd);
@@ -45,6 +52,12 @@ void cmd_list(context* ctx, command* cmd)
     time_t rawtime;
 
     char cwd[BUFFER_SIZE], cwd_orig[BUFFER_SIZE];
+
+	if (!ctx->logged_in) {
+			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+			return;
+	}
+
     memset(cwd, 0, BUFFER_SIZE);
     memset(cwd_orig, 0, BUFFER_SIZE);
     
@@ -75,7 +88,7 @@ void cmd_list(context* ctx, command* cmd)
 				fprintf(stderr, "FTP: Error reading file stats...\n");
 			} else {
 				char perms[9];
-            	memset(perms, 0, 9);
+				memset(perms, 0, 9);
 
 				rawtime = statbuf.st_mtime;
 				time = localtime(&rawtime);
@@ -123,7 +136,16 @@ void cmd_type(context* ctx, command* cmd) {
 }
 
 void cmd_cwd(context* ctx, command* cmd) {
-
+	if (!ctx->logged_in) {
+			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+			return;
+	}
+	
+	if (!chdir(cmd->arg)) {
+		message_send(ctx->fd, "250 Directory successfully changed.\n");
+	} else {
+		message_send(ctx->fd, "550 Failed to change directory.\n");
+	}
 }
 
 void cmd_pwd(context* ctx, command* cmd) {
@@ -134,6 +156,7 @@ void cmd_pwd(context* ctx, command* cmd) {
 		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
 		return;
 	}
+
     if (getcwd(cwd, BUFFER_SIZE) != NULL) {
       	strcat(result, "257 \"");
 		strcat(result, cwd);

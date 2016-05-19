@@ -5,7 +5,6 @@ Team:
 ----
 * Bogdan Robert Andrei
 * Milica Ionuț Cătălin
-* Pop Tudor
 * Stefăniță Răzvan
 
 How to compile & run:

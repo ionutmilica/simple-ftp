@@ -48,7 +48,10 @@ void context_handle(context* ctx, command* cmd) {
 			break;
 		case PWD:
 			cmd_pwd(ctx, cmd);
-			break;	
+			break;
+		case CWD:
+			cmd_cwd(ctx, cmd);
+			break;
 		case TYPE:
 			cmd_type(ctx, cmd); 
 			break;
