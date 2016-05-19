@@ -177,12 +177,12 @@ int lookup(char *needle, const char **haystack, int count)
 }
 
 int execute_command(Command *cmd, int sock){
-	switch(lookup_cmd(cmd->command)){
-	    case LIST: ftp_ls_firectory(sock, cmd->arg); break;
-	    case RETR: ftp_recv_file(sock, cmd->arg); break;
-	    case STOR: ftp_send_file(sock, cmd->arg); break;
-	    case DELE: ftp_remove_file(sock, cmd->arg); break;
-	    default: 
-	      break;
-	  }
+    switch(lookup_cmd(cmd->command)){
+        case LIST: ftp_ls_firectory(sock, cmd->arg); break;
+        case RETR: ftp_recv_file(sock, cmd->arg); break;
+        case STOR: ftp_send_file(sock, cmd->arg); break;
+        case DELE: ftp_remove_file(sock, cmd->arg); break;
+        default: 
+          break;
+      }
 }

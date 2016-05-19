@@ -2,9 +2,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /**
  * Creates a socket and binds
@@ -37,4 +40,24 @@ int create_socket(int port)
   	listen(sock, 5);
 
   	return sock;
+}
+
+void perm(int perm, char* str_perm)
+{
+	int curperm = 0, i, read, write, exec;
+	char fbuff[3];
+
+	read = write = exec = 0;
+
+	for (i = 6; i >= 0; i -= 3) {
+		curperm = ((perm & ALLPERMS) >> i ) & 0x7;
+		memset(fbuff,0,3);
+		
+		read = (curperm >> 2) & 0x1;
+		write = (curperm >> 1) & 0x1;
+		exec = (curperm >> 0) & 0x1;
+
+		sprintf(fbuff, "%c%c%c", read ? 'r' : '-', write ? 'w' : '-', exec ? 'x' : '-');
+		strcat(str_perm,fbuff);
+	}
 }

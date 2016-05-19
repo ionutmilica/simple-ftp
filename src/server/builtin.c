@@ -28,7 +28,7 @@ void cmd_pasv(context* ctx, command* cmd)
 
 	sprintf(buffer, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\n", ip[0], ip[1], ip[2], ip[3], p1, p2);
 	ctx->mode = SERVER;
-	ctx->pasv_fd = create_socket(6555);
+	ctx->pasv_fd = create_socket(port);
 
 	message_send(ctx->fd, buffer);
 }
@@ -63,30 +63,27 @@ void cmd_list(context* ctx, command* cmd)
 		int addrlen = 0;
 		struct sockaddr_in client_address;
 		addrlen = sizeof(client_address);
+		
+		message_send(ctx->fd, "150 Sending the data.\n");
+
 		connection = accept(ctx->pasv_fd, (struct sockaddr*) &client_address, (socklen_t*)&addrlen);
 
-		printf("Conn: %d\n");
-		
 		while ((entry = readdir(dp))) {
 			if (stat(entry->d_name, &statbuf) == -1) {
 				fprintf(stderr, "FTP: Error reading file stats...\n");
 			} else {
+				char perms[9];
+            	memset(perms, 0, 9);
+
 				rawtime = statbuf.st_mtime;
 				time = localtime(&rawtime);
 				strftime(timebuff,80,"%b %d %H:%M",time);
-				printf("%c%s %5d %4d %4d %8d %s %s\r\n", 
-					(entry->d_type==DT_DIR)?'d':'-',
-					"-",
-					statbuf.st_nlink,
-					statbuf.st_uid, 
-					statbuf.st_gid,
-					statbuf.st_size,
-					timebuff,
-					entry->d_name);
+			 	perm((statbuf.st_mode & ALLPERMS), perms);
+
 				dprintf(connection,
 					"%c%s %5d %4d %4d %8d %s %s\r\n", 
 					(entry->d_type==DT_DIR)?'d':'-',
-					"-",
+					perms,
 					statbuf.st_nlink,
 					statbuf.st_uid, 
 					statbuf.st_gid,
@@ -95,11 +92,10 @@ void cmd_list(context* ctx, command* cmd)
 					entry->d_name);
 			}
 		}
-		message_send(ctx->fd, "150 Here comes the directory listing.\n");
-		ctx->mode = NORMAL;
-		message_send(ctx->fd, "226 Directory send OK.\n");
 		close(connection);
 		close(ctx->pasv_fd);
+		ctx->mode = NORMAL;
+		message_send(ctx->fd, "226 Directory send OK.\n");
 	} else if (ctx->mode == CLIENT) {
 		message_send(ctx->fd, "502 Command not implemented.\n");
 	} else {
