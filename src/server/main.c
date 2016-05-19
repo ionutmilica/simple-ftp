@@ -16,6 +16,7 @@
 #include "utils.h"
 #include "context.h"
 #include "command.h"
+#include "user.h"
 
 void* handler(void* data) {
 	int sock = *(int*) data, bytes_read;
@@ -75,7 +76,16 @@ void server(int port)
 
 int main() 
 {
+	user_manager* mgr = user_manager_new("users.txt");
+
+	// Start normal server
 	server(5555);
+
+	// Start admin server
+
+	// Start soap server
+
+	user_manager_destroy(mgr);
 
 	return 0;
 }
