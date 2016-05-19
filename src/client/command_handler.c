@@ -33,37 +33,44 @@ int ftp_send_file(int sock, char* filepath){
     char buff[BSIZE];
     char *cmdfn = "STOR %s";
     Response *response = malloc(sizeof(Response)); 
-    
-    // socksend = ftp_pasv(sock);
-    // sprintf(buff, cmdfn, filepath);
-    // send(sock, buff, sizeof(buff), 0);
-    // send_file(socksend, filepath);
+    ConnectionInfo *cifs = malloc(sizeof(ConnectionInfo));
 
-    // recv_response(sock, response);
+    ftp_pasv(sock, cifs);
+    sprintf(buff, cmdfn, filepath);
+    send(sock, buff, sizeof(buff), 0);
+
+    socksend = connect_to_server(cifs);
+
+    send_file(socksend, filepath);
+
+    recv_response(sock, response);
+    recv_response(sock, response);
     return response->code;
 }
 
 int ftp_recv_file(int sock, char* filepath){
-    int socksend, fdfile, pipefd[2];
+    int socksend, fdfile, pipefd[2], res;
     char buff[BSIZE];
     char *cmdfn = "RETR %s";
     Response *response = malloc(sizeof(Response)); 
-    
-//     socksend = ftp_pasv(sock);
-//     sprintf(buff, cmdfn, filepath);
-//     send(sock, buff, sizeof(buff), 0);
+    ConnectionInfo *cifs = malloc(sizeof(ConnectionInfo));
 
-//     recv_response(sock, response);
+    ftp_pasv(sock, cifs);
+    sprintf(buff, cmdfn, filepath);
+    send(sock, buff, sizeof(buff), 0);
 
-//     if(response->code == 150){
-//         FILE *fp = fopen(filepath,"w");
-//         fdfile = fileno(fp);
-//         if(pipe(pipefd)==-1)perror("ftp_stor: pipe");
-// //            while ((res = splice(connection, 0, pipefd[1], NULL, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE))>0){
-// //                splice(pipefd[0], NULL, fd, 0, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE);
-// //              }
-//     }       
-//     recv_response(sock, response);
+    recv_response(sock, response);
+
+    if(response->code == 150){
+        socksend = connect_to_server(cifs);
+        FILE *fp = fopen(filepath,"w");
+        fdfile = fileno(fp);
+        if(pipe(pipefd)==-1)perror("ftp_stor: pipe");
+           while ((res = splice(socksend, 0, pipefd[1], NULL, 8192, SPLICE_F_MORE | SPLICE_F_MOVE))>0){
+               splice(pipefd[0], NULL, fdfile, 0, 8192, SPLICE_F_MORE | SPLICE_F_MOVE);
+             }
+    }       
+    recv_response(sock, response);
     return response->code;
 }
 
