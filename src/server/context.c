@@ -70,6 +70,9 @@ void context_handle(context* ctx, command* cmd) {
 		case STOR:
 			cmd_stor(ctx, cmd);
 			break;
+		case DELE:
+			cmd_dele(ctx, cmd);
+			break;
 		default:
 			message_send(ctx->fd, "502 Not implemented\n");
 	}

@@ -10,11 +10,11 @@ typedef struct Command {
 
 
 typedef enum commands_enum { 
-  AUTH, USER, PASS, PWD, CWD, TYPE, PORT, PASV, LIST, RETR, STOR,
+  AUTH, USER, PASS, PWD, CWD, TYPE, PORT, PASV, LIST, RETR, STOR, DELE,
 } commands_enum;
 
 static const char* commands[] = {
-	"AUTH", "USER", "PASS", "PWD", "CWD", "TYPE", "PORT", "PASV", "LIST", "RETR", "STOR",
+	"AUTH", "USER", "PASS", "PWD", "CWD", "TYPE", "PORT", "PASV", "LIST", "RETR", "STOR", "DELE",
 };
 
 command* command_new();

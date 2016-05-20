@@ -13,6 +13,7 @@ How to compile & run:
 cd build
 cmake .. # if you add files or change the structure
 make
+echo "user pass 1 #\n" > users.txt # to create the users database
 ../bin/server [port]
 ../bin/client [ip] [port] [username] [password]
 ```

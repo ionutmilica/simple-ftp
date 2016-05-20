@@ -216,6 +216,20 @@ void cmd_stor(context* ctx, command* cmd)
 	close(ctx->pasv_fd);
 }
 
+void cmd_dele(context* ctx, command* cmd) 
+{
+	if (!ctx->logged_in) {
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
+	}
+
+	if (unlink(cmd->arg) == -1) {
+		message_send(ctx->fd, "550 File unavailable.\n");
+	} else {
+		message_send(ctx->fd, "250 Requested file action okay, completed.\n");
+	}
+}
+
 void cmd_type(context* ctx, command* cmd) 
 {
 	if (!ctx->logged_in) {

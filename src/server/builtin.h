@@ -13,5 +13,6 @@ void cmd_pass(context* ctx, command* cmd);
 void cmd_list(context* ctx, command* cmd);
 void cmd_retr(context* ctx, command* cmd);
 void cmd_stor(context* ctx, command* cmd);
+void cmd_dele(context* ctx, command* cmd);
 
 #endif
