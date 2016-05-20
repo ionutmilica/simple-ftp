@@ -1,20 +1,11 @@
 #define _GNU_SOURCE
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/socket.h>
 #include <resolv.h>
 #include <signal.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <sys/sendfile.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #define MAX_LEN 512
@@ -40,12 +31,12 @@ typedef struct ConnectionInfo
 
 typedef enum cmdlist 
 { 
-  DELE, LIST, PASS, PASV, RETR, USER, STOR
+  DELE, LIST, PASS, PASV, RETR, USER, STOR, PWD, CWD
 } cmdlist;
 
 static const char *cmdlist_str[] = 
 {
-  "DELE", "LIST", "PASS", "PASV", "RETR", "USER", "STOR"
+  "DELE", "LIST", "PASS", "PASV", "RETR", "USER", "STOR", "PWD", "CWD"
 };
 
 void clean_string(char*);
@@ -66,3 +57,5 @@ int ftp_send_file(int, char*);
 int ftp_recv_file(int, char*);
 int ftp_remove_file(int, char*);
 int ftp_ls_firectory(int, char*);
+int ftp_pwd(int, char*);
+int ftp_cwd(int, char*);
