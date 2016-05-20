@@ -67,6 +67,9 @@ void context_handle(context* ctx, command* cmd) {
 		case RETR:
 			cmd_retr(ctx, cmd);
 			break;
+		case STOR:
+			cmd_stor(ctx, cmd);
+			break;
 		default:
 			message_send(ctx->fd, "502 Not implemented\n");
 	}

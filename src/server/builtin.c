@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "builtin.h"
 #include "utils.h"
 #include <stdlib.h>
@@ -14,6 +15,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/sendfile.h>
 
 #include "user.h"
 
@@ -49,7 +51,7 @@ void cmd_list(context* ctx, command* cmd)
 	struct dirent *entry;
 	struct stat statbuf;
 	struct tm *time;
-	char timebuff[80], current_dir[BUFFER_SIZE];
+	char timebuff[80];
 	int connection;
 	time_t rawtime;
 
@@ -100,10 +102,10 @@ void cmd_list(context* ctx, command* cmd)
 					"%c%s %5d %4d %4d %8d %s %s\r\n", 
 					(entry->d_type==DT_DIR)?'d':'-',
 					perms,
-					statbuf.st_nlink,
-					statbuf.st_uid, 
-					statbuf.st_gid,
-					statbuf.st_size,
+					(int) statbuf.st_nlink,
+					(int) statbuf.st_uid, 
+					(int) statbuf.st_gid,
+					(int) statbuf.st_size,
 					timebuff,
 					entry->d_name);
 			}
@@ -157,6 +159,57 @@ void cmd_retr(context* ctx, command* cmd)
 		}
 	} else {
 		message_send(ctx->fd, "550 Please use PASV instead of PORT.\n");
+	}
+
+	ctx->mode = NORMAL;
+	close(ctx->pasv_fd);
+}
+
+void cmd_stor(context* ctx, command* cmd) 
+{
+	int conn, fd, pipefd[2], res = 1;
+	FILE *file;
+	const int buff_size = 8192;
+	
+	if (!ctx->logged_in) {
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
+	}
+
+	file = fopen(cmd->arg, "w");
+
+	if (file == NULL) {
+		message_send(ctx->fd, "451 Requested action aborted. Local error in processing.\n");
+	} else if (ctx->mode != SERVER) {
+		message_send(ctx->fd, "550 Please use PASV instead of PORT.\n");
+	} else {
+		struct sockaddr_in client_address;
+		int addrlen = sizeof(client_address);
+
+		fd = fileno(file);
+		conn = accept(ctx->pasv_fd, (struct sockaddr*) &client_address, (socklen_t*)&addrlen);
+
+		// After we accept the client we should be sure that we don't accept other connections into this port
+		close(ctx->pasv_fd);
+
+		if (pipe(pipefd) == -1) {
+			perror("ftp_stor: pipe");
+		}
+
+		message_send(ctx->fd, "125 Data connection already open; transfer starting.\n");
+
+		while ((res = splice(conn, 0, pipefd[1], NULL, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE)) > 0) {
+			splice(pipefd[0], NULL, fd, 0, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE);
+		}
+
+		if (res == -1) {
+			message_send(ctx->fd, "451 Requested action aborted. Local error in processing.\n");
+		} else {
+			message_send(ctx->fd, "226 File send OK.\n");
+		}
+
+		close(conn);
+		close(fd);
 	}
 
 	ctx->mode = NORMAL;

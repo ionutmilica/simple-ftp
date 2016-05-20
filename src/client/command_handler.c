@@ -114,7 +114,7 @@ int ftp_ls_firectory(int socket, char* path){
 }
 
 int ftp_pasv(int sock, ConnectionInfo* cif){
-    int ip[4], p1, p2, socksend;
+    int ip[4], p1, p2;
     char *cmd = "PASV";
     Response *response = malloc(sizeof(Response)); 
     
@@ -148,14 +148,13 @@ int connect_to_server(ConnectionInfo *cif){
 
     sv_adress.sin_family = AF_INET;
     sv_adress.sin_port = htons(cif->port);
-    if (inet_aton(ipadr, &sv_adress.sin_addr.s_addr) == 0 )
-    {
+
+    if (inet_aton(ipadr, (struct in_addr *)(&sv_adress.sin_addr.s_addr)) == 0 ) {
         perror(ipadr);
         exit(0);
     }
 
-    if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 )
-    {
+    if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 ) {
         perror("Connect ");
         exit(0);
     }
@@ -184,5 +183,6 @@ int execute_command(Command *cmd, int sock){
         case DELE: ftp_remove_file(sock, cmd->arg); break;
         default: 
           break;
-      }
+    }
+    return 0;
 }
