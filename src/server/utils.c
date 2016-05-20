@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/un.h>
 
 /**
  * Creates a socket and binds
@@ -33,6 +34,31 @@ int create_socket(int port)
 
 	if (bind(sock,(struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
 		printf("On port %d:", port);
+		perror("Cannot bind socket to address");
+		exit(EXIT_FAILURE);
+	}
+
+  	listen(sock, 5);
+
+  	return sock;
+}
+
+int create_named_socket(const char* path)
+{
+	struct sockaddr_un server_addr;
+	int sock, reuse = 1;
+
+	server_addr.sun_family = AF_UNIX;
+	strncpy(server_addr.sun_path, (char *)path, sizeof(server_addr.sun_path));
+
+	if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+		perror("Cannot open socket\n");
+		exit(EXIT_FAILURE);
+	}
+
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof reuse);
+
+	if (bind(sock,(struct sockaddr*) &server_addr, sizeof(server_addr)) < 0) {
 		perror("Cannot bind socket to address");
 		exit(EXIT_FAILURE);
 	}

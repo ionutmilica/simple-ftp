@@ -8,7 +8,6 @@ typedef struct Command {
 	char arg[BUFFER_SIZE];
 } command;
 
-
 typedef enum commands_enum { 
   AUTH, USER, PASS, PWD, CWD, TYPE, PORT, PASV, LIST, RETR, STOR, DELE,
 } commands_enum;

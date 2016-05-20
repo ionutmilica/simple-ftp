@@ -52,10 +52,10 @@ void* handler(void* data) {
 }
 
 /**
- * Creates a socket and binds
+ * Creates the server
  *
  * @param port int
- * @return int
+ * @return void
  */
 void server(int port, user_manager* mgr)
 {
@@ -81,6 +81,29 @@ void server(int port, user_manager* mgr)
 	}
 }
 
+void admin_server(user_manager* mgr)
+{
+	int sock = create_named_socket("/tmp/ftp");
+	int connection, addr_len;
+	struct sockaddr_in client_addr;
+
+	addr_len = sizeof(struct sockaddr_in);
+
+	while ((connection = accept(sock, (struct sockaddr *)&client_addr, (socklen_t*)&addr_len)) ) {
+		pthread_t t;
+		conn_handler* h = malloc(sizeof(conn_handler));
+		h->mgr = mgr;
+		h->socket = connection;
+
+		// Spawn a thread and send the connection fd
+		printf("Received a new connection!\n");
+
+		if (pthread_create(&t, NULL, handler, (void*) h) < 0) {
+			perror("Thread creation failed");
+			exit(EXIT_FAILURE);
+		}
+	}
+}
 
 int main() 
 {
@@ -88,6 +111,8 @@ int main()
 
 	// Start normal server
 	server(5555, mgr);
+
+	//admin_server(mgr);
 
 	// Start admin server
 
