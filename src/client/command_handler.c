@@ -114,7 +114,7 @@ int ftp_ls_firectory(int socket, char* path){
 }
 
 int ftp_pasv(int sock, ConnectionInfo* cif){
-    int ip[4], p1, p2;
+    int ip[4], p1, p2, socksend;
     char *cmd = "PASV";
     Response *response = malloc(sizeof(Response)); 
     
@@ -134,6 +134,27 @@ int ftp_pasv(int sock, ConnectionInfo* cif){
     return response->code;
 }
 
+int ftp_pwd(int sock, char* args){
+    char buff[BSIZE] = "PWD";
+    Response *response = malloc(sizeof(Response)); 
+    
+    send(sock, buff, sizeof(buff), 0);
+    
+    recv_response(sock, response);
+    return response->code;
+}
+
+int ftp_cwd(int sock, char* args){
+    char buff[BSIZE];
+    char *cmdfn = "CWD %s";
+    Response *response = malloc(sizeof(Response)); 
+    
+    sprintf(buff, cmdfn, args);
+    send(sock, buff, sizeof(buff), 0);
+    
+    recv_response(sock, response);
+    return response->code;
+}
 int connect_to_server(ConnectionInfo *cif){
     int socksend;
     struct sockaddr_in sv_adress;
@@ -148,13 +169,14 @@ int connect_to_server(ConnectionInfo *cif){
 
     sv_adress.sin_family = AF_INET;
     sv_adress.sin_port = htons(cif->port);
-
-    if (inet_aton(ipadr, (struct in_addr *)(&sv_adress.sin_addr.s_addr)) == 0 ) {
+    if (inet_aton(ipadr, &sv_adress.sin_addr.s_addr) == 0 )
+    {
         perror(ipadr);
         exit(0);
     }
 
-    if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 ) {
+    if (connect(socksend, (struct sockaddr*)&sv_adress, sizeof(sv_adress)) != 0 )
+    {
         perror("Connect ");
         exit(0);
     }
@@ -176,13 +198,14 @@ int lookup(char *needle, const char **haystack, int count)
 }
 
 int execute_command(Command *cmd, int sock){
-    switch(lookup_cmd(cmd->command)){
-        case LIST: ftp_ls_firectory(sock, cmd->arg); break;
-        case RETR: ftp_recv_file(sock, cmd->arg); break;
-        case STOR: ftp_send_file(sock, cmd->arg); break;
-        case DELE: ftp_remove_file(sock, cmd->arg); break;
-        default: 
-          break;
-    }
-    return 0;
+	switch(lookup_cmd(cmd->command)){
+	    case LIST: ftp_ls_firectory(sock, cmd->arg); break;
+	    case RETR: ftp_recv_file(sock, cmd->arg); break;
+	    case STOR: ftp_send_file(sock, cmd->arg); break;
+	    case DELE: ftp_remove_file(sock, cmd->arg); break;
+        case PWD: ftp_pwd(sock, cmd->arg); break;
+        case CWD: ftp_cwd(sock, cmd->arg); break;
+	    default: 
+	      break;
+	  }
 }
