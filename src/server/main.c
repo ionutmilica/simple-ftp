@@ -66,18 +66,18 @@ void server(int port, user_manager* mgr)
 	addr_len = sizeof(struct sockaddr_in);
 
 	while ((connection = accept(sock, (struct sockaddr *)&client_addr, (socklen_t*)&addr_len)) ) {
-        pthread_t t;
-        conn_handler* h = malloc(sizeof(conn_handler));
-        h->mgr = mgr;
-        h->socket = connection;
+		pthread_t t;
+		conn_handler* h = malloc(sizeof(conn_handler));
+		h->mgr = mgr;
+		h->socket = connection;
 
-        // Spawn a thread and send the connection fd
-        printf("Received a new connection!\n");
+		// Spawn a thread and send the connection fd
+		printf("Received a new connection!\n");
 
-        if (pthread_create(&t, NULL, handler, (void*) h) < 0) {
-            perror("Thread creation failed");
-            exit(EXIT_FAILURE);
-        }
+		if (pthread_create(&t, NULL, handler, (void*) h) < 0) {
+			perror("Thread creation failed");
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 

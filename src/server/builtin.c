@@ -5,6 +5,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+
 #include <unistd.h>
 #include <dirent.h>
 #include <time.h>
@@ -22,8 +24,8 @@ void cmd_pasv(context* ctx, command* cmd)
 	char buffer[BUFFER_SIZE];
 
 	if (!ctx->logged_in) {
-			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
-			return;
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
 	}
 
 	// @todo: Generate the port
@@ -44,35 +46,35 @@ void cmd_pasv(context* ctx, command* cmd)
 
 void cmd_list(context* ctx, command* cmd) 
 {
-    struct dirent *entry;
-    struct stat statbuf;
-    struct tm *time;
-    char timebuff[80], current_dir[BUFFER_SIZE];
-    int connection;
-    time_t rawtime;
+	struct dirent *entry;
+	struct stat statbuf;
+	struct tm *time;
+	char timebuff[80], current_dir[BUFFER_SIZE];
+	int connection;
+	time_t rawtime;
 
-    char cwd[BUFFER_SIZE], cwd_orig[BUFFER_SIZE];
+	char cwd[BUFFER_SIZE], cwd_orig[BUFFER_SIZE];
 
 	if (!ctx->logged_in) {
-			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
-			return;
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
 	}
 
-    memset(cwd, 0, BUFFER_SIZE);
-    memset(cwd_orig, 0, BUFFER_SIZE);
-    
-    getcwd(cwd_orig, BUFFER_SIZE);
-    
-    if (strlen(cmd->arg) > 0 && cmd->arg[0] != '-') {
+	memset(cwd, 0, BUFFER_SIZE);
+	memset(cwd_orig, 0, BUFFER_SIZE);
+
+	getcwd(cwd_orig, BUFFER_SIZE);
+
+	if (strlen(cmd->arg) > 0 && cmd->arg[0] != '-') {
 		chdir(cmd->arg);
-    }
+	}
 
-    getcwd(cwd, BUFFER_SIZE);
-    DIR *dp = opendir(cwd);
+	getcwd(cwd, BUFFER_SIZE);
+	DIR *dp = opendir(cwd);
 
-    if (!dp) {
-      message_send(ctx->fd, "550 Failed to open directory.\n");
-    }
+	if (!dp) {
+	  message_send(ctx->fd, "550 Failed to open directory.\n");
+	}
 
 	if (ctx->mode == SERVER) {
 		int addrlen = 0;
@@ -117,14 +119,35 @@ void cmd_list(context* ctx, command* cmd)
 		message_send(ctx->fd, "425 Use PASV or PORT first.\n");
 	}
 
-    closedir(dp);
-    chdir(cwd_orig);
+	closedir(dp);
+	chdir(cwd_orig);
 }
 
-void cmd_type(context* ctx, command* cmd) {
+void cmd_retr(context* ctx, command* cmd) 
+{
+	int fd;
+	struct stat stat_buf;
+
 	if (!ctx->logged_in) {
-			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
-			return;
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
+	}
+
+	if (ctx->mode == SERVER) {
+		if(access(cmd->arg,R_OK)==0 && (fd = open(cmd->arg,O_RDONLY))){
+			fstat(fd, &stat_buf);
+			message_send(ctx->fd, "150 Opening BINARY mode data connection.\n");
+		}
+	} else {
+		message_send(ctx->fd, "550 Please use PASV instead of PORT.\n");
+	}
+}
+
+void cmd_type(context* ctx, command* cmd) 
+{
+	if (!ctx->logged_in) {
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
 	}
 	if (cmd->arg[0] == 'I') {
 		message_send(ctx->fd, "200 Switching to Binary mode.\n");
@@ -135,12 +158,12 @@ void cmd_type(context* ctx, command* cmd) {
 	}
 }
 
-void cmd_cwd(context* ctx, command* cmd) {
+void cmd_cwd(context* ctx, command* cmd) 
+{
 	if (!ctx->logged_in) {
-			message_send(ctx->fd, "530 Please login with USER and PASS.\n");
-			return;
+		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		return;
 	}
-	
 	if (!chdir(cmd->arg)) {
 		message_send(ctx->fd, "250 Directory successfully changed.\n");
 	} else {
@@ -148,26 +171,28 @@ void cmd_cwd(context* ctx, command* cmd) {
 	}
 }
 
-void cmd_pwd(context* ctx, command* cmd) {
+void cmd_pwd(context* ctx, command* cmd) 
+{
 	char cwd[BUFFER_SIZE], result[BUFFER_SIZE];
-    memset(result, 0, BUFFER_SIZE);
+	memset(result, 0, BUFFER_SIZE);
 
 	if (!ctx->logged_in) {
 		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
 		return;
 	}
 
-    if (getcwd(cwd, BUFFER_SIZE) != NULL) {
-      	strcat(result, "257 \"");
+	if (getcwd(cwd, BUFFER_SIZE) != NULL) {
+		strcat(result, "257 \"");
 		strcat(result, cwd);
-      	strcat(result, "\"\n");
-      	message_send(ctx->fd, result);
-    } else {
+		strcat(result, "\"\n");
+		message_send(ctx->fd, result);
+	} else {
 		message_send(ctx->fd, "550 Failed to get pwd.\n");
-    }
+	}
 }
 
-void cmd_user(context* ctx, command* cmd) {
+void cmd_user(context* ctx, command* cmd) 
+{
 	if (!user_manager_find(ctx->mgr, cmd->arg)) {
 		message_send(ctx->fd, "530 Invalid username\n");
 		return;
@@ -177,7 +202,8 @@ void cmd_user(context* ctx, command* cmd) {
 	message_send(ctx->fd, "331 User name okay, need password.\n");
 }
 
-void cmd_pass(context* ctx, command* cmd) {
+void cmd_pass(context* ctx, command* cmd) 
+{
 	if (!user_manager_find_with_pass(ctx->mgr, ctx->user, cmd->arg)) {
 		message_send(ctx->fd, "500 Invalid username or password\n");
 		return;
