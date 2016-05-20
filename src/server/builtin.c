@@ -77,10 +77,9 @@ void cmd_list(context* ctx, command* cmd)
 	}
 
 	if (ctx->mode == SERVER) {
-		int addrlen = 0;
 		struct sockaddr_in client_address;
-		addrlen = sizeof(client_address);
-		
+		int addrlen = sizeof(client_address);
+
 		message_send(ctx->fd, "150 Sending the data.\n");
 
 		connection = accept(ctx->pasv_fd, (struct sockaddr*) &client_address, (socklen_t*)&addrlen);
@@ -125,8 +124,10 @@ void cmd_list(context* ctx, command* cmd)
 
 void cmd_retr(context* ctx, command* cmd) 
 {
-	int fd;
+	int fd, conn;
 	struct stat stat_buf;
+	off_t offset = 0;
+	int sent_total = 0;
 
 	if (!ctx->logged_in) {
 		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
@@ -135,12 +136,31 @@ void cmd_retr(context* ctx, command* cmd)
 
 	if (ctx->mode == SERVER) {
 		if(access(cmd->arg,R_OK)==0 && (fd = open(cmd->arg,O_RDONLY))){
+			struct sockaddr_in client_address;
+			int addrlen = sizeof(client_address);
+
 			fstat(fd, &stat_buf);
 			message_send(ctx->fd, "150 Opening BINARY mode data connection.\n");
+
+			conn = accept(ctx->pasv_fd, (struct sockaddr*) &client_address, (socklen_t*)&addrlen);
+			close(ctx->pasv_fd);
+
+			if ((sent_total = sendfile(conn, fd, &offset, stat_buf.st_size))) {
+				message_send(ctx->fd, "226 File send OK.\n");
+			} else {
+				message_send(ctx->fd, "550 Failed to read file.\n");
+			}
+			close(fd);
+			close(conn);
+		} else {
+			message_send(ctx->fd, "550 Failed to get file\n");
 		}
 	} else {
 		message_send(ctx->fd, "550 Please use PASV instead of PORT.\n");
 	}
+
+	ctx->mode = NORMAL;
+	close(ctx->pasv_fd);
 }
 
 void cmd_type(context* ctx, command* cmd) 
