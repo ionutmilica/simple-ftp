@@ -12,6 +12,12 @@ int main(int argc, char *argv[]){
   char command[256];
   int code;
 
+  if(argc<3)
+  {
+      printf("Usage:%s [username] [password]\n",argv[0]);
+      return 1;
+  }
+
   if((sfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0){
     printf("Open socket error!\n");
     exit(0);
@@ -25,15 +31,17 @@ int main(int argc, char *argv[]){
     perror("Connect ");
     exit(0);
   }
+  code = ftp_login(sfd, argv[1], argv[2]);
+  if(code == 230){
+    while(1){
+        Command *cmd = malloc(sizeof(Command));
+        fflush(stdin);
+        fgets(command, sizeof(command), stdin);
+        clean_string(command);
 
-  while(1){
-      Command *cmd = malloc(sizeof(Command));
-      fflush(stdin);
-      fgets(command, sizeof(command), stdin);
-      clean_string(command);
-
-      parse_command(command, cmd);
-      
-      code = execute_command(cmd, sfd);
+        parse_command(command, cmd);
+        
+        code = execute_command(cmd, sfd);
+    }
   }
 }  
