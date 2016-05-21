@@ -83,10 +83,14 @@ void server(int port, user_manager* mgr)
 
 void admin_server(user_manager* mgr)
 {
-	int sock = create_named_socket("/tmp/ftp");
+	const char* socket_path = "/tmp/ftp";
+	int sock;
 	int connection, addr_len;
 	struct sockaddr_in client_addr;
 
+	unlink(socket_path);
+
+	sock = create_named_socket(socket_path);
 	addr_len = sizeof(struct sockaddr_in);
 
 	while ((connection = accept(sock, (struct sockaddr *)&client_addr, (socklen_t*)&addr_len)) ) {
@@ -110,9 +114,9 @@ int main()
 	user_manager* mgr = user_manager_new("users.txt");
 
 	// Start normal server
-	server(5555, mgr);
+	//server(5555, mgr);
 
-	//admin_server(mgr);
+	admin_server(mgr);
 
 	// Start admin server
 
