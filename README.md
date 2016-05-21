@@ -16,6 +16,7 @@ make
 echo "user pass 1 #\n" > users.txt # to create the users database
 ../bin/server [port]
 ../bin/client [ip] [port] [username] [password]
+../bin/admin [username] [password]
 ```
 
 License:
