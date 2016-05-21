@@ -8,4 +8,5 @@ include_directories(
 )
 
 # Creates the executable
-add_executable(client ${sv_Files})
+add_executable(client main.c command_handler.c command_utils.c)
+add_executable(admin admin.c command_handler.c command_utils.c)
