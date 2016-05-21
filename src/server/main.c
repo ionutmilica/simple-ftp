@@ -23,6 +23,12 @@ typedef struct conn_handler {
 	int socket;
 } conn_handler;
 
+typedef struct server_info {
+	user_manager* mgr;
+	int port;
+	char sock_path[BUFFER_SIZE];
+} server_info;
+
 void* handler(void* data) {
 	conn_handler* h = (conn_handler*) data;
 	int bytes_read;
@@ -57,12 +63,16 @@ void* handler(void* data) {
  * @param port int
  * @return void
  */
-void server(int port, user_manager* mgr)
+void* server(void* data)
 {
-	int sock = create_socket(port);
+	server_info info = *(server_info*) data;
+	user_manager* mgr = info.mgr;
+
+	int port, sock;
 	int connection, addr_len;
 	struct sockaddr_in client_addr;
 
+	sock = create_socket(info.port);
 	addr_len = sizeof(struct sockaddr_in);
 
 	while ((connection = accept(sock, (struct sockaddr *)&client_addr, (socklen_t*)&addr_len)) ) {
@@ -72,25 +82,27 @@ void server(int port, user_manager* mgr)
 		h->socket = connection;
 
 		// Spawn a thread and send the connection fd
-		printf("Received a new connection!\n");
+		printf("Received a new connection in the normal server!\n");
 
 		if (pthread_create(&t, NULL, handler, (void*) h) < 0) {
 			perror("Thread creation failed");
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	return NULL;
 }
 
-void admin_server(user_manager* mgr)
+void* admin_server(void* data)
 {
-	const char* socket_path = "/tmp/ftp";
-	int sock;
-	int connection, addr_len;
+	server_info info = *(server_info*) data;
+	user_manager* mgr = info.mgr;
+	int sock, connection, addr_len;
 	struct sockaddr_in client_addr;
 
-	unlink(socket_path);
+	unlink(info.sock_path);
 
-	sock = create_named_socket(socket_path);
+	sock = create_named_socket(info.sock_path);
 	addr_len = sizeof(struct sockaddr_in);
 
 	while ((connection = accept(sock, (struct sockaddr *)&client_addr, (socklen_t*)&addr_len)) ) {
@@ -100,28 +112,41 @@ void admin_server(user_manager* mgr)
 		h->socket = connection;
 
 		// Spawn a thread and send the connection fd
-		printf("Received a new connection!\n");
+		printf("Received a new connection in the admin server!\n");
 
 		if (pthread_create(&t, NULL, handler, (void*) h) < 0) {
 			perror("Thread creation failed");
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	return NULL;
 }
 
 int main() 
 {
+	pthread_t servers[3];
+	server_info* info;
 	user_manager* mgr = user_manager_new("users.txt");
 
-	// Start normal server
-	//server(5555, mgr);
 
-	admin_server(mgr);
+	/** Start socket server **/
+	info = malloc(sizeof(server_info));
+	info->port = 5555;
+	info->mgr = mgr;
+	pthread_create(&servers[0], NULL, server, (void*) info);
 
-	// Start admin server
+	/** Start named socket server **/
+	info = malloc(sizeof(server_info));
+	strcpy(info->sock_path, "/tmp/ftp");
+	info->mgr = mgr;
+	pthread_create(&servers[1], NULL, admin_server, (void*) info);
 
-	// Start soap server
 
+	// Wait for the servers to finish (in theory never)
+	pthread_join(servers[0], NULL);
+	pthread_join(servers[0], NULL);
+	
 	user_manager_destroy(mgr);
 
 	return 0;
