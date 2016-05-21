@@ -90,6 +90,8 @@ void* server(void* data)
 		}
 	}
 
+	free(data);
+
 	return NULL;
 }
 
@@ -119,6 +121,8 @@ void* admin_server(void* data)
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	free(data);
 
 	return NULL;
 }
