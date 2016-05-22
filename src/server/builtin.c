@@ -128,14 +128,14 @@ void cmd_users(context* ctx, command* cmd) {
 	int connection;
 
 	if (!ctx->logged_in) {
-		close(ctx->pasv_fd);
 		message_send(ctx->fd, "530 Please login with USER and PASS.\n");
+		close(ctx->pasv_fd);
 		return;
 	}
 
 	if (ctx->permission != 1) {
-		close(ctx->pasv_fd);
 		message_send(ctx->fd, "530 You are not admin.\n");
+		close(ctx->pasv_fd);
 		return;
 	}
 
