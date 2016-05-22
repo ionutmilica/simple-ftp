@@ -76,6 +76,16 @@ int user_manager_find(user_manager* mgr, const char* name)
 	return 0;
 }
 
+void user_manager_get(user_manager* mgr, const char* name, user* u) {
+	int i = 0;
+	for (i = 0; i < mgr->length; i++) {
+		if (strcmp(mgr->users[i].name, name) == 0) {
+			*u = mgr->users[i];
+			return;
+		}
+	}
+}
+
 /**
  * Check if user with password exist in the database
  *

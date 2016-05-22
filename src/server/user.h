@@ -20,5 +20,6 @@ void user_manager_destroy(user_manager* mgr);
 void user_manager_display(user_manager* mgr);
 int user_manager_find(user_manager* mgr, const char* name);
 int user_manager_find_with_pass(user_manager* mgr, const char* name, const char* pass);
+void user_manager_get(user_manager* mgr, const char* name, user* u);
 
 #endif

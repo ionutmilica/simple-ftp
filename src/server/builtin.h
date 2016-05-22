@@ -15,4 +15,6 @@ void cmd_retr(context* ctx, command* cmd);
 void cmd_stor(context* ctx, command* cmd);
 void cmd_dele(context* ctx, command* cmd);
 
+void cmd_users(context* ctx, command* cmd);
+
 #endif

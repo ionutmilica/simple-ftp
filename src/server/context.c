@@ -15,6 +15,7 @@ context* context_new() {
 	ctx->fd = -1;
 	ctx->pasv_fd = -1;
 	ctx->mode = NORMAL;
+	ctx->permission = 0;
 
 	return ctx;
 }
@@ -72,6 +73,9 @@ void context_handle(context* ctx, command* cmd) {
 			break;
 		case DELE:
 			cmd_dele(ctx, cmd);
+			break;
+		case USERS:
+			cmd_users(ctx, cmd);
 			break;
 		default:
 			message_send(ctx->fd, "502 Not implemented\n");

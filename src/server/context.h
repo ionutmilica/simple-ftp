@@ -13,6 +13,7 @@ typedef enum modes {
 typedef struct context {
 	char user[100];
 	int logged_in;
+	int permission;
 	int fd;
 	int pasv_fd;
 	int mode;
