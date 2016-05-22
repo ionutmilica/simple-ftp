@@ -133,7 +133,7 @@ void cmd_users(context* ctx, command* cmd) {
 		return;
 	}
 
-	if (!ctx->permission != 1) {
+	if (ctx->permission != 1) {
 		close(ctx->pasv_fd);
 		message_send(ctx->fd, "530 You are not admin.\n");
 		return;
@@ -155,7 +155,7 @@ void cmd_users(context* ctx, command* cmd) {
 		close(connection);
 		close(ctx->pasv_fd);
 		ctx->mode = NORMAL;
-		message_send(ctx->fd, "226 Directory send OK.\n");
+		message_send(ctx->fd, "226 Users send OK.\n");
 	} else if (ctx->mode == CLIENT) {
 		message_send(ctx->fd, "502 Command not implemented.\n");
 	} else {
