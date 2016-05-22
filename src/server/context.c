@@ -33,8 +33,12 @@ void message_send(int fd, const char* message) {
 	write(fd, message, strlen(message));
 }
 
-void context_handle(context* ctx, command* cmd) {
+void context_handle(context* ctx, command* cmd, int type) {
 	printf("Command: %s, Arg: %s\n", cmd->command, cmd->arg);
+
+	if (type != 1) {
+		ctx->permission = 0;
+	}
 
 	switch (command_find(cmd->command)) {
 		case AUTH:

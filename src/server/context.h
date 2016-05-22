@@ -22,7 +22,7 @@ typedef struct context {
 
 context* context_new();
 void context_destroy(context* ctx);
-void context_handle(context* ctx, command* cmd);
+void context_handle(context* ctx, command* cmd, int type);
 void message_send(int fd, const char* message);
 
 #endif

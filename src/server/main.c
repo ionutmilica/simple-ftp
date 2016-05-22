@@ -21,6 +21,7 @@
 typedef struct conn_handler {
 	user_manager* mgr;
 	int socket;
+	int type;
 } conn_handler;
 
 typedef struct server_info {
@@ -47,7 +48,7 @@ void* handler(void* data) {
 
  		command* cmd = command_new();
  		command_parse(cmd, buffer);
- 		context_handle(ctx, cmd);
+ 		context_handle(ctx, cmd, h->type);
  		command_destroy(cmd);
  	}
 
@@ -80,6 +81,7 @@ void* server(void* data)
 		conn_handler* h = malloc(sizeof(conn_handler));
 		h->mgr = mgr;
 		h->socket = connection;
+		h->type = 0;
 
 		// Spawn a thread and send the connection fd
 		printf("Received a new connection in the normal server!\n");
@@ -112,6 +114,7 @@ void* admin_server(void* data)
 		conn_handler* h = malloc(sizeof(conn_handler));
 		h->mgr = mgr;
 		h->socket = connection;
+		h->type = 1;
 
 		// Spawn a thread and send the connection fd
 		printf("Received a new connection in the admin server!\n");
