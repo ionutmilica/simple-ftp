@@ -113,6 +113,35 @@ int ftp_ls_firectory(int socket, char* path){
     return response->code;
 }
 
+int ftp_admin_users(int socket, char* path){
+    int socksend, r;
+    char buff[BSIZE];
+    char *cmdfn = "USERS";
+    Response *response = malloc(sizeof(Response)); 
+    ConnectionInfo *cifs = malloc(sizeof(ConnectionInfo));
+    
+    ftp_pasv(socket, cifs);
+    
+    sprintf(buff, cmdfn, path);
+    send(socket, buff, sizeof(buff), 0);
+
+    socksend = connect_to_server(cifs);
+
+    recv_response(socket, response);
+
+    if(response->code == 150){
+        memset(buff, 0, BSIZE);
+
+        while((r = recv(socksend , buff , BSIZE, 0)) > 0)
+        {
+            printf("%s", buff);
+        }
+    }
+
+    recv_response(socket, response);
+    return response->code;
+}
+
 int ftp_pasv(int sock, ConnectionInfo* cif){
     int ip[4], p1, p2, socksend;
     char *cmd = "PASV";
@@ -205,6 +234,7 @@ int execute_command(Command *cmd, int sock){
 	    case DELE: ftp_remove_file(sock, cmd->arg); break;
         case PWD: ftp_pwd(sock, cmd->arg); break;
         case CWD: ftp_cwd(sock, cmd->arg); break;
+        case USERS: ftp_admin_users(sock, cmd->arg); break;
 	    default: 
 	      break;
 	  }

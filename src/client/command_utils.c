@@ -19,16 +19,23 @@ void clean_string(char* string) {
 }
 
 void recv_response(int sock, Response *response){
-    char buffer[BSIZE];
-    int bytes_read;
+    char buffer[1], responsebuff[BSIZE];
+    int bytes_read, i = 0;
 
     memset(buffer, 0, BSIZE);
-    bytes_read = read(sock, buffer, BSIZE);
-    if(bytes_read <= BSIZE){
-        parse_response(buffer, response);
+    while(bytes_read = read(sock, buffer, 1)){
+        responsebuff[i] = buffer[0];
+        if(buffer[0] == '\n'){
+            break;
+        }
+        i++;
+/*        if(bytes_read <= BSIZE){
+            parse_response(buffer, response);
+        }*/
     }
-	printf("%s", buffer);
-	memset(buffer, 0, BSIZE);
+    parse_response(responsebuff, response);
+	printf("%s", responsebuff);
+	memset(responsebuff, 0, BSIZE);
 }
 
 void send_file(int sock, char* filename){

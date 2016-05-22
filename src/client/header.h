@@ -31,12 +31,12 @@ typedef struct ConnectionInfo
 
 typedef enum cmdlist 
 { 
-  DELE, LIST, PASS, PASV, RETR, USER, STOR, PWD, CWD
+  DELE, LIST, PASS, PASV, RETR, USER, STOR, PWD, CWD, USERS
 } cmdlist;
 
 static const char *cmdlist_str[] = 
 {
-  "DELE", "LIST", "PASS", "PASV", "RETR", "USER", "STOR", "PWD", "CWD"
+  "DELE", "LIST", "PASS", "PASV", "RETR", "USER", "STOR", "PWD", "CWD", "USERS"
 };
 
 void clean_string(char*);
@@ -57,5 +57,6 @@ int ftp_send_file(int, char*);
 int ftp_recv_file(int, char*);
 int ftp_remove_file(int, char*);
 int ftp_ls_firectory(int, char*);
+int ftp_admin_users(int, char*);
 int ftp_pwd(int, char*);
 int ftp_cwd(int, char*);
