@@ -136,6 +136,8 @@ int ftp_admin_users(int socket, char* path){
         {
             printf("%s", buff);
         }
+    }else if(response->code > 500){
+        return response->code;
     }
 
     recv_response(socket, response);
