@@ -125,12 +125,12 @@ int ftp_admin_users(int socket, char* path){
     sprintf(buff, cmdfn, path);
     send(socket, buff, sizeof(buff), 0);
 
-    socksend = connect_to_server(cifs);
-
     recv_response(socket, response);
 
     if(response->code == 150){
         memset(buff, 0, BSIZE);
+
+        socksend = connect_to_server(cifs);
 
         while((r = recv(socksend , buff , BSIZE, 0)) > 0)
         {
@@ -146,10 +146,11 @@ int ftp_admin_users(int socket, char* path){
 
 int ftp_pasv(int sock, ConnectionInfo* cif){
     int ip[4], p1, p2, socksend;
-    char *cmd = "PASV";
+    char cmd[4] = "PASV";
     Response *response = malloc(sizeof(Response)); 
     
-    send(sock, cmd, sizeof(cmd), 0);
+    printf("%s\n", cmd);
+    write(sock, cmd, 4);
     
     recv_response(sock, response);
 

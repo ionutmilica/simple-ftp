@@ -50,6 +50,8 @@ void* handler(void* data) {
  		command_parse(cmd, buffer);
  		context_handle(ctx, cmd, h->type);
  		command_destroy(cmd);
+
+ 		memset(buffer, 0, BUFFER_SIZE);
  	}
 
  	context_destroy(ctx);
